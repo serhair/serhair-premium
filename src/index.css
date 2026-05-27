@@ -1,0 +1,154 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Gallery Styles */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.gallery-item { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 12px; cursor: pointer; }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.gallery-item:hover img { transform: scale(1.08); }
+.gallery-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: grid; place-items: center; opacity: 0; transition: opacity 0.3s; }
+.gallery-item:hover .gallery-overlay { opacity: 1; }
+.lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.95); display: grid; place-items: center; padding: 24px; }
+.lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+.lightbox-close { position: absolute; top: 20px; right: 40px; background: none; border: none; color: #fff; font-size: 48px; cursor: pointer; }
+
+@layer base {
+  :root {
+    /* Dark Luxury Palette (SER HAIR) */
+    --color-black: #050507;
+    --color-graphite: #0b0d12;
+    --color-panel: #11141c;
+    --color-primary-gold: #d9b45f;
+    --color-gold2: #fff0b6;
+    --color-soft: #efe7d1;
+    --color-muted: rgba(255,255,255,.62);
+    --color-line: rgba(255,255,255,.11);
+    --color-bg-hero: #050507;
+    --color-charcoal: #0b0d12;
+    --color-bg-white: #050507;
+    --color-off-white: #0b0d12;
+    --color-cream: #11141c;
+    --color-text-dark: #ffffff;
+    --color-text-medium: rgba(255,255,255,.62);
+    --color-text-light: rgba(255,255,255,.48);
+    --color-border-light: rgba(255,255,255,.11);
+
+    --font-display: Georgia, "Times New Roman", serif;
+    --font-body: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+    --background: 240 20% 2%;
+    --foreground: 0 0% 100%;
+    --card: 220 20% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 240 20% 2%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 42 60% 61%;
+    --primary-foreground: 240 20% 2%;
+    --secondary: 220 20% 8%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 20% 8%;
+    --muted-foreground: 0 0% 62%;
+    --accent: 220 20% 8%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 100% / 0.11;
+    --input: 0 0% 100% / 0.11;
+    --ring: 42 60% 61%;
+    --radius: 0rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: #fff;
+    background-color: #050507;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 80% 10%, rgba(217,180,95,.16), transparent 34%),
+      radial-gradient(circle at 10% 30%, rgba(53,72,113,.18), transparent 30%);
+    z-index: -1;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-gold);
+    color: #050507;
+  }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); }
+}
+
+@layer components {
+  .gold-btn {
+    background: linear-gradient(135deg, #d9b45f 0%, #b8944f 100%);
+    color: #050507;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+  }
+  .gold-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(217, 180, 95, 0.25);
+  }
+  .glass-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+  }
+  .glass-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(217, 180, 95, 0.3);
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (max-width: 768px) {
+  .service-card-v78 {
+    grid-template-columns: 1fr !important;
+  }
+  .service-card-v78 > div:first-child {
+    min-height: 200px !important;
+    order: -1;
+  }
+  .nav-desktop {
+    display: none !important;
+  }
+  .nav-mobile-toggle {
+    display: block !important;
+  }
+  .trust-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .trust-stats {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+}

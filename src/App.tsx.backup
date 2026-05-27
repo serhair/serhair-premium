@@ -1,0 +1,1434 @@
+import { useEffect, useRef, useState, useCallback } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import SplitType from "split-type";
+import HairGrowthScene from "./components/HairGrowthScene";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const primaryGold = "#C9A45C";
+const goldLight = "#D4B76A";
+const textDark = "#2D1E08";
+const textMedium = "#7A6838";
+const textLight = "#9A8A58";
+const cream = "#F0E2C0";
+const offWhite = "#F8F0D8";
+const charcoal = "#1E1808";
+const borderLight = "#D4C8A0";
+const bgWhite = "#FFFBF0";
+const bgHero = "#0D0A04";
+
+/* ======= PRELOADER ======= */
+const Preloader = ({ onComplete }: { onComplete: () => void }) => {
+  const [progress, setProgress] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 15;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(interval);
+        setTimeout(() => {
+          gsap.to(ref.current, {
+            opacity: 0,
+            duration: 0.6,
+            ease: "power2.inOut",
+            onComplete,
+          });
+        }, 400);
+      }
+      setProgress(Math.min(p, 100));
+    }, 80);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        background: bgHero,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 32,
+      }}
+    >
+      <img src="/assets/logo-main.png" alt="SerHair Center" style={{ height: 140, objectFit: "contain" }} />
+      <div
+        style={{
+          width: 200,
+          height: 2,
+          background: "rgba(201,164,92,0.2)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: primaryGold,
+            transform: `scaleX(${progress / 100})`,
+            transformOrigin: "left",
+            transition: "transform 0.1s ease-out",
+          }}
+        />
+      </div>
+      <span
+        style={{
+          fontFamily: "var(--font-body)",
+          fontSize: "0.75rem",
+          fontWeight: 500,
+          letterSpacing: "0.12em",
+          color: textLight,
+          textTransform: "uppercase",
+        }}
+      >
+        YÜKLENİYOR
+      </span>
+    </div>
+  );
+};
+
+/* ======= NAVIGATION ======= */
+const Navigation = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > window.innerHeight - 100);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollTo = (id: string) => {
+    setMobileOpen(false);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const navLinks = [
+    { label: "ANASAYFA", id: "hero" },
+    { label: "HİZMETLERİMİZ", id: "services" },
+    { label: "SIKÇA SORULANLAR", id: "faq" },
+    { label: "İLETİŞİM", id: "contact" },
+  ];
+
+  return (
+    <>
+      <nav
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          height: 72,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 48px",
+          transition: "all 0.3s ease",
+          background: scrolled ? "rgba(255,251,240,0.95)" : "transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          borderBottom: scrolled ? `1px solid ${borderLight}` : "1px solid transparent",
+        }}
+      >
+        <button
+          onClick={() => scrollTo("hero")}
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "1.25rem",
+            fontWeight: 500,
+            letterSpacing: "0.1em",
+            color: scrolled ? primaryGold : bgWhite,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          <img src="/assets/logo-main.png" alt="SerHair Center" style={{ height: 48, objectFit: "contain" }} />
+        </button>
+
+        <div className="hidden md:flex" style={{ gap: 36, alignItems: "center" }}>
+          {navLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => scrollTo(link.id)}
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                letterSpacing: "0.1em",
+                color: scrolled ? textDark : bgWhite,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                position: "relative",
+              }}
+              onMouseEnter={(e) => {
+                const underline = e.currentTarget.querySelector(".nav-underline") as HTMLElement;
+                if (underline) underline.style.width = "100%";
+              }}
+              onMouseLeave={(e) => {
+                const underline = e.currentTarget.querySelector(".nav-underline") as HTMLElement;
+                if (underline) underline.style.width = "0%";
+              }}
+            >
+              {link.label}
+              <span
+                className="nav-underline"
+                style={{
+                  position: "absolute",
+                  bottom: -4,
+                  left: 0,
+                  width: "0%",
+                  height: 1,
+                  background: scrolled ? primaryGold : bgWhite,
+                  transition: "width 0.3s ease",
+                }}
+              />
+            </button>
+          ))}
+        </div>
+
+        <div className="hidden md:block">
+          <button
+            onClick={() => scrollTo("contact")}
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: textDark,
+              background: primaryGold,
+              border: "none",
+              height: 44,
+              padding: "0 24px",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = goldLight;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = primaryGold;
+            }}
+          >
+            Randevu Al
+          </button>
+        </div>
+
+        <button
+          className="md:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            gap: 5,
+          }}
+        >
+          <span style={{ width: 24, height: 2, background: scrolled ? textDark : bgWhite, transition: "all 0.3s", transform: mobileOpen ? "rotate(45deg) translateY(7px)" : "none" }} />
+          <span style={{ width: 24, height: 2, background: scrolled ? textDark : bgWhite, transition: "all 0.3s", opacity: mobileOpen ? 0 : 1 }} />
+          <span style={{ width: 24, height: 2, background: scrolled ? textDark : bgWhite, transition: "all 0.3s", transform: mobileOpen ? "rotate(-45deg) translateY(-7px)" : "none" }} />
+        </button>
+      </nav>
+
+      {mobileOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9,
+            background: primaryGold,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 32,
+          }}
+        >
+          {navLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => scrollTo(link.id)}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "2rem",
+                color: textDark,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {link.label}
+            </button>
+          ))}
+          <button
+            onClick={() => scrollTo("contact")}
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: primaryGold,
+              background: textDark,
+              border: "none",
+              height: 48,
+              padding: "0 32px",
+              cursor: "pointer",
+            }}
+          >
+            Randevu Al
+          </button>
+        </div>
+      )}
+    </>
+  );
+};
+
+/* ======= SECTION HEADER ======= */
+const SectionHeader = ({ label, title, light = false }: { label: string; title: string; light?: boolean }) => {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (!titleRef.current) return;
+    const split = new SplitType(titleRef.current, { types: "chars" });
+    if (split.chars) {
+      gsap.from(split.chars, {
+        yPercent: 105,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.02,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: titleRef.current,
+          start: "top 85%",
+        },
+      });
+    }
+    return () => {
+      split.revert();
+    };
+  }, []);
+
+  return (
+    <div style={{ textAlign: "center", marginBottom: 64 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 16,
+          marginBottom: 20,
+        }}
+      >
+        <span style={{ width: 60, height: 1, background: borderLight }} />
+        <span
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            letterSpacing: "0.12em",
+            color: primaryGold,
+            textTransform: "uppercase",
+          }}
+        >
+          {label}
+        </span>
+        <span style={{ width: 60, height: 1, background: borderLight }} />
+      </div>
+      <h2
+        ref={titleRef}
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "clamp(2rem, 4vw, 3.5rem)",
+          fontWeight: 400,
+          lineHeight: 1.2,
+          letterSpacing: "-0.02em",
+          color: light ? bgWhite : textDark,
+          overflow: "hidden",
+        }}
+      >
+        {title}
+      </h2>
+    </div>
+  );
+};
+
+/* ======= SERVICE CARD ======= */
+const ServiceCard = ({ number, icon, title, description, features }: { number: string; icon: React.ReactNode; title: string; description: string; features: string[] }) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    gsap.from(ref.current, {
+      y: 60,
+      opacity: 0,
+      duration: 0.8,
+      ease: "power3.out",
+      scrollTrigger: { trigger: ref.current, start: "top 85%" },
+    });
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        background: cream,
+        padding: 36,
+        cursor: "default",
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 8px 32px rgba(45,30,8,0.12)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+        <div style={{ color: primaryGold, flexShrink: 0 }}>{icon}</div>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: "0.875rem", color: primaryGold, opacity: 0.5, letterSpacing: "0.1em" }}>
+          {number}
+        </span>
+      </div>
+      <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", fontWeight: 500, color: textDark, marginBottom: 14, lineHeight: 1.3 }}>
+        {title}
+      </h3>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9375rem", color: textMedium, lineHeight: 1.7, marginBottom: 20 }}>
+        {description}
+      </p>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0, marginBottom: 24, flex: 1 }}>
+        {features.map((f, i) => (
+          <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10, fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textDark, lineHeight: 1.5 }}>
+            <span style={{ color: primaryGold, fontSize: "1rem", lineHeight: 1, marginTop: 2, flexShrink: 0 }}>+</span>
+            {f}
+          </li>
+        ))}
+      </ul>
+      <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: primaryGold, textTransform: "uppercase", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, marginTop: "auto" }}>
+        DETAYLI BİLGİ
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke={primaryGold} strokeWidth="1.5"/></svg>
+      </span>
+    </div>
+  );
+};
+
+/* ======= SERVICES SECTION ======= */
+const ServicesSection = () => {
+  const services = [
+    {
+      number: "01",
+      title: "DHI Saç Ekimi",
+      description: "Choi Pen teknolojisiyle kanal açmadan, doğrudan deri altına greft yerleştirme. En sık ve en doğal görünümü sunan premium teknik.",
+      features: [
+        "Kanal açılmadan doğrudan ekim",
+        "Daha sık greft yerleşimi",
+        "Çok daha doğal saç çizgisi",
+        "Hızlı iyileşme süreci",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <path d="M12 36l6-24h6l-6 24h-6z" />
+          <circle cx="24" cy="12" r="3" />
+          <path d="M28 24h8M32 20v8" />
+        </svg>
+      ),
+    },
+    {
+      number: "02",
+      title: "FUE Saç Ekimi",
+      description: "Mikro motor ve safir bıçak teknolojisiyle tek tek foliküler ünite çıkarma. İz kalmadan, minimum ağrıyla maximum sonuç.",
+      features: [
+        "Safir bıçak ile mikro kesiler",
+        "Sırt ve ense bölgesinden alım",
+        "Hemen hemen izsiz iyileşme",
+        "Büyük greft kapasitesi",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <circle cx="24" cy="24" r="8" />
+          <circle cx="24" cy="24" r="4" />
+          <path d="M24 8v4M24 36v4M8 24h4M36 24h4" />
+          <path d="M13 13l3 3M32 13l-3 3M13 35l3-3M32 35l-3-3" />
+        </svg>
+      ),
+    },
+    {
+      number: "03",
+      title: "PRP Tedavisi",
+      description: "Kendi kanınızdan elde edilen büyüme faktörleriyle saç köklerinizi besleyin. Ekime hazırlık ve sonrası bakım için ideal destek.",
+      features: [
+        "Kendi kanınızdan elde edilir",
+        "Saç köklerini güçlendirir",
+        "Dökülme hızını yavaşlatır",
+        "Ekim sonrası iyileşmeyi hızlandırır",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <path d="M24 8c0 0-10 8-10 16a10 10 0 0020 0c0-8-10-16-10-16z" />
+          <circle cx="24" cy="24" r="2" />
+          <circle cx="20" cy="20" r="1.5" fill={primaryGold} />
+          <circle cx="28" cy="22" r="1.5" fill={primaryGold} />
+          <circle cx="24" cy="30" r="1.5" fill={primaryGold} />
+        </svg>
+      ),
+    },
+    {
+      number: "04",
+      title: "Sakal Ekimi",
+      description: "Yüz hatlarınızı belirginleştiren, doğal büyüme yönünde planlanan kalıcı sakal çözümü. Seyrek veya hiç çıkmayan bölgelere özel.",
+      features: [
+        "Yüz hatlarına özel tasarım",
+        "Doğal sakal yönünde yerleştirme",
+        "Kalıcı ve bakım gerektirmez",
+        "Bıyık, favori ve ense dahil",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <path d="M16 16c0 0 8-4 16 0M14 20c2 8 6 12 10 14M34 20c-2 8-6 12-10 14" />
+          <path d="M18 18c2 0 4 2 4 4M30 18c-2 0-4 2-4 4" />
+        </svg>
+      ),
+    },
+    {
+      number: "05",
+      title: "Mikro Kaş Ekimi",
+      description: "Tek tek kök greftleriyle yüz simetrisine uygun, doğal ve kalıcı kaş tasarımı. Kıl yönü ve açısı sanatsal hassasiyetle planlanır.",
+      features: [
+        "Yüz simetrisine özel tasarım",
+        "Kıl yönüne uygun yerleştirme",
+        "Seyrek veya dökülmüş kaşlara çözüm",
+        "Ömür boyu kalıcı sonuç",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <path d="M10 26c6-4 12-5 18-4" />
+          <path d="M10 28c6-4 12-5 18-4" />
+          <path d="M10 30c6-4 12-5 18-4" />
+          <path d="M28 22c4-1 8 0 10 2" />
+          <path d="M28 24c4-1 8 0 10 2" />
+          <path d="M28 26c4-1 8 0 10 2" />
+        </svg>
+      ),
+    },
+    {
+      number: "06",
+      title: "Long Hair Kaş Ekimi",
+      description: "Kesmeden uzun saç kökleriyle yapılan özel teknik. Ekim sonrası anında uzun ve görünür kaşlara kavuşun, sonuç beklemeyin.",
+      features: [
+        "Kesmeden uzun saçlarla ekim",
+        "Anında görünür uzun kaşlar",
+        "Normal hayata hemen dönüş",
+        "Mikro Kaş'tan daha yoğun kaplama",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <path d="M8 20c8-2 16-2 24 0M8 24c8-2 16-2 24 0M8 28c8-2 16-2 24 0" />
+          <path d="M6 32c6 4 14 6 22 6s16-2 22-6" />
+          <path d="M14 16c4-4 8-5 12-5s8 1 12 5" />
+          <circle cx="18" cy="14" r="1" fill={primaryGold} />
+          <circle cx="24" cy="13" r="1" fill={primaryGold} />
+          <circle cx="30" cy="14" r="1" fill={primaryGold} />
+        </svg>
+      ),
+    },
+    {
+      number: "07",
+      title: "Saç Mezoterapisi",
+      description: "Vitamin, mineral ve amino asit karışımlarının saçlı deriye enjekte edilmesiyle kökleri besleyen, dökülmeyi durduran yenileyici tedavi.",
+      features: [
+        "Saç köklerine doğrudan besin desteği",
+        "Dökülme karşıtı etkili formül",
+        "Saç kalitesini ve parlaklığını artırır",
+        "Ağrısız, konforlu uygulama",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <path d="M24 6v36" />
+          <path d="M16 14h10M16 22h10M16 30h10" />
+          <circle cx="32" cy="14" r="2" />
+          <circle cx="32" cy="22" r="2" />
+          <circle cx="32" cy="30" r="2" />
+          <path d="M34 14l4-2M34 22l4-2M34 30l4-2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      number: "08",
+      title: "Saç Exozom Tedavisi",
+      description: "Kök hücreden elde edilen exozomlarla saç foliküllerini uyaran, hücresel düzeyde yenileme sağlayan ileri teknoloji saç tedavisi.",
+      features: [
+        "Hücresel düzeyde yenileme",
+        "Saç foliküllerini uyarıcı etki",
+        "PRP'nin güçlendirilmiş versiyonu",
+        "Dökülme önleyici ve kalınlaştırıcı",
+      ],
+      icon: (
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke={primaryGold} strokeWidth="1.5">
+          <circle cx="24" cy="24" r="10" />
+          <circle cx="24" cy="24" r="3" fill={primaryGold} />
+          <circle cx="14" cy="16" r="2" />
+          <circle cx="34" cy="16" r="2" />
+          <circle cx="14" cy="32" r="2" />
+          <circle cx="34" cy="32" r="2" />
+          <path d="M22 16l2-8 2 8M22 32l2 8 2-8" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <section id="services" style={{ background: bgWhite, padding: "120px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <SectionHeader label="HİZMETLERİMİZ" title="Uzmanlarımızın Sunduğu Hizmetler" />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: 24,
+          }}
+        >
+          {services.map((s) => (
+            <ServiceCard key={s.number} {...s} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ======= WHY CHOOSE SECTION ======= */
+const WhyChooseSection = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const [counts, setCounts] = useState({ yil: 0, hasta: 0, greft: 0 });
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (!imageRef.current) return;
+    gsap.from(imageRef.current, {
+      clipPath: "inset(0 100% 0 0)",
+      duration: 1.2,
+      ease: "power4.inOut",
+      scrollTrigger: { trigger: imageRef.current, start: "top 80%" },
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const trigger = ScrollTrigger.create({
+      trigger: sectionRef.current,
+      start: "top 75%",
+      onEnter: () => {
+        if (hasAnimated.current) return;
+        hasAnimated.current = true;
+        const obj = { yil: 0, hasta: 0, greft: 0 };
+        gsap.to(obj, {
+          yil: 15,
+          hasta: 10000,
+          greft: 50000,
+          duration: 2,
+          ease: "power2.out",
+          onUpdate: () => {
+            setCounts({ yil: Math.floor(obj.yil), hasta: Math.floor(obj.hasta), greft: Math.floor(obj.greft) });
+          },
+        });
+      },
+    });
+    return () => trigger.kill();
+  }, []);
+
+  return (
+    <section ref={sectionRef} style={{ background: offWhite, padding: "120px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }} className="why-grid">
+        <div ref={imageRef} style={{ position: "relative" }}>
+          <div style={{ position: "absolute", top: -16, left: -16, right: 16, bottom: 16, border: `2px solid ${primaryGold}`, zIndex: 0 }} />
+          <img
+            src="/assets/img-clinic.jpg"
+            alt="Modern saç ekim kliniği"
+            style={{ width: "100%", height: "auto", aspectRatio: "3/4", objectFit: "cover", position: "relative", zIndex: 1 }}
+          />
+        </div>
+        <div>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: primaryGold, textTransform: "uppercase", display: "block", marginBottom: 16 }}>
+            NEDEN SER HAİR
+          </span>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3rem)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", color: textDark, marginBottom: 24 }}>
+            15 Yıllık Tecrübeyle<br />Güvenilir Sonuçlar
+          </h2>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "1.125rem", color: textMedium, lineHeight: 1.8, marginBottom: 40 }}>
+            SerHair olarak her hasta bireysel yaklaşımla değerlendirilir. En son teknoloji cihazlar, steril ortam ve uzman hekim kadromuzla sizlere en iyi hizmeti sunuyoruz.
+          </p>
+          <div style={{ display: "flex", gap: 48, marginBottom: 40 }} className="stats-row">
+            <div>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: primaryGold, display: "block" }}>{counts.yil}+</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: textMedium, textTransform: "uppercase" }}>Yıllık Deneyim</span>
+            </div>
+            <div>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: primaryGold, display: "block" }}>{counts.hasta.toLocaleString()}+</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: textMedium, textTransform: "uppercase" }}>Mutlu Hasta</span>
+            </div>
+            <div>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: primaryGold, display: "block" }}>{counts.greft.toLocaleString()}+</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: textMedium, textTransform: "uppercase" }}>Ekilmiş Greft</span>
+            </div>
+          </div>
+          <button
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: primaryGold,
+              background: "transparent",
+              border: `1px solid ${primaryGold}`,
+              padding: "14px 28px",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = primaryGold;
+              e.currentTarget.style.color = bgWhite;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = primaryGold;
+            }}
+          >
+            Hakkımızda
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ======= PROCESS SECTION ======= */
+const ProcessSection = () => {
+  const steps = [
+    { num: "01", title: "Online Konsultasyon", desc: "Uzman ekibimize fotoğraflarınızı gönderin, ilk değerlendirmeyi alın." },
+    { num: "02", title: "Detaylı Analiz", desc: "Saç dönüş alanı, greft ihtiyacı ve planlama yapılır." },
+    { num: "03", title: "Operasyon Günü", desc: "Steril ortamda, lokal anestezi ile konforlu bir işlem." },
+    { num: "04", title: "Takip ve Sonuç", desc: "6-12 ayda tam sonuç. Düzenli kontroller ve destek." },
+  ];
+
+  return (
+    <section style={{ background: bgWhite, padding: "120px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <SectionHeader label="SAÇ EKİM SÜRECİ" title="Adım Adım Saç Ekimi" />
+        <div className="process-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32, position: "relative" }}>
+          <div className="process-line" style={{ position: "absolute", top: 24, left: "12.5%", right: "12.5%", height: 1, background: borderLight, zIndex: 0 }} />
+          <div className="process-line-fill" style={{ position: "absolute", top: 24, left: "12.5%", width: 0, height: 1, background: primaryGold, zIndex: 0, transition: "width 1.5s ease" }} />
+          {steps.map((step, i) => {
+            const ref = useRef<HTMLDivElement>(null);
+            useEffect(() => {
+              if (!ref.current) return;
+              gsap.from(ref.current, {
+                x: -30,
+                opacity: 0,
+                duration: 0.6,
+                delay: i * 0.2,
+                ease: "power2.out",
+                scrollTrigger: {
+                  trigger: ref.current,
+                  start: "top 75%",
+                  onEnter: () => {
+                    const fill = document.querySelector(".process-line-fill") as HTMLElement;
+                    if (fill) fill.style.width = `${(i + 1) * 25}%`;
+                  },
+                },
+              });
+            }, []);
+            return (
+              <div key={step.num} ref={ref} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: cream, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", border: `2px solid ${primaryGold}` }}>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: "1.125rem", color: primaryGold }}>{step.num}</span>
+                </div>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", fontWeight: 500, color: textDark, marginBottom: 12 }}>{step.title}</h3>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9375rem", color: textMedium, lineHeight: 1.7 }}>{step.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ======= GALLERY SECTION ======= */
+const BeforeAfterSlider = ({ beforeSrc, afterSrc }: { beforeSrc: string; afterSrc: string }) => {
+  const [sliderPos, setSliderPos] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const handleMove = useCallback((clientX: number) => {
+    if (!containerRef.current || !isDragging.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    setSliderPos(Math.min(Math.max(x, 5), 95));
+  }, []);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => handleMove(e.clientX);
+    const onUp = () => { isDragging.current = false; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches[0]) handleMove(e.touches[0].clientX);
+    };
+    const onTouchEnd = () => { isDragging.current = false; };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onTouchMove);
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [handleMove]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ position: "relative", width: "100%", aspectRatio: "4/3", overflow: "hidden", cursor: "col-resize" }}
+      onMouseDown={() => { isDragging.current = true; }}
+      onTouchStart={() => { isDragging.current = true; }}
+    >
+      <img src={afterSrc} alt="Sonra" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      <div style={{ position: "absolute", inset: 0, width: "100%", height: "100%", clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}>
+        <img src={beforeSrc} alt="Önce" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+      <div style={{ position: "absolute", top: 0, bottom: 0, left: `${sliderPos}%`, width: 2, background: bgWhite, transform: "translateX(-50%)", zIndex: 2 }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 32, height: 32, borderRadius: "50%", background: bgWhite, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M4 2l-3 4 3 4M8 2l3 4-3 4" stroke={textDark} strokeWidth="1.5" fill="none"/></svg>
+        </div>
+      </div>
+      <span style={{ position: "absolute", bottom: 12, left: 12, fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: bgWhite, background: "rgba(30,24,8,0.6)", padding: "4px 8px" }}>ÖNCE</span>
+      <span style={{ position: "absolute", bottom: 12, right: 12, fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: bgWhite, background: "rgba(30,24,8,0.6)", padding: "4px 8px" }}>SONRA</span>
+    </div>
+  );
+};
+
+const GallerySection = () => {
+  const items = [
+    { before: "/assets/img-beforeafter-1.jpg", after: "/assets/img-beforeafter-1.jpg", initials: "A.Y.", op: "DHI Saç Ekimi", grafts: "3500" },
+    { before: "/assets/img-beforeafter-2.jpg", after: "/assets/img-beforeafter-2.jpg", initials: "M.K.", op: "Sakal Ekimi", grafts: "1800" },
+    { before: "/assets/img-beforeafter-3.jpg", after: "/assets/img-beforeafter-3.jpg", initials: "B.C.", op: "FUE Saç Ekimi", grafts: "4200" },
+  ];
+
+  return (
+    <section style={{ background: charcoal, padding: "120px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <SectionHeader label="SONUÇLAR" title="Gerçek Hasta Sonuçlarımız" light />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24, marginBottom: 48 }}>
+          {items.map((item, i) => {
+            const ref = useRef<HTMLDivElement>(null);
+            useEffect(() => {
+              if (!ref.current) return;
+              gsap.from(ref.current, { y: 60, opacity: 0, duration: 0.8, delay: i * 0.12, ease: "power3.out", scrollTrigger: { trigger: ref.current, start: "top 85%" } });
+            }, []);
+            return (
+              <div key={i} ref={ref}>
+                <BeforeAfterSlider beforeSrc={item.before} afterSrc={item.after} />
+                <div style={{ padding: "16px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: textLight, textTransform: "uppercase" }}>
+                    {item.initials} — {item.op}
+                  </span>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: "1rem", color: primaryGold }}>
+                    {item.grafts} Greft
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <button
+            style={{
+              fontFamily: "var(--font-body)", fontSize: "0.875rem", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase",
+              color: bgWhite, background: "transparent", border: `1px solid ${bgWhite}`, padding: "14px 28px", cursor: "pointer", transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = bgWhite; e.currentTarget.style.color = charcoal; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = bgWhite; }}
+          >
+            Tüm Sonuçları Gör
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ======= TESTIMONIALS SECTION ======= */
+const TestimonialsSection = () => {
+  const testimonials = [
+    { quote: "SerHair'deki deneyimim harikaydı. 8 ay sonra doğal ve gururla tarayabileceğim saçlara kavuştum.", name: "Ahmet Y.", op: "DHI Saç Ekimi", img: "/assets/img-testimonial-1.jpg" },
+    { quote: "Profesyonel ekip, modern klinik ve muhteşem sonuç. Kendimi 10 yaş genç hissediyorum. Kesinlikle tavsiye ederim!", name: "Mehmet K.", op: "FUE Saç Ekimi", img: "/assets/img-testimonial-2.jpg" },
+    { quote: "Sakal ekimi için araştırma yaparken SerHair'i buldum. Sonuçtan çok memnunum, doğal ve dolgun bir sakalım oldu.", name: "Burak C.", op: "Sakal Ekimi", img: "/assets/img-testimonial-3.jpg" },
+  ];
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isPaused, testimonials.length]);
+
+  return (
+    <section style={{ background: offWhite, padding: "120px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <SectionHeader label="YORUMLAR" title="Mutlu Hastalarımızın Deneyimleri" />
+        <div
+          style={{ maxWidth: 800, margin: "0 auto", position: "relative" }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {testimonials.map((t, i) => (
+            <div
+              key={i}
+              style={{
+                background: cream,
+                padding: 40,
+                display: i === activeIndex ? "block" : "none",
+                animation: i === activeIndex ? "fadeIn 0.5s ease" : "none",
+              }}
+            >
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "4rem", color: primaryGold, opacity: 0.2, lineHeight: 1, display: "block", marginBottom: 16 }}>"</span>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "1.125rem", color: textDark, lineHeight: 1.8, fontStyle: "italic", marginBottom: 32 }}>
+                {t.quote}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <img src={t.img} alt={t.name} style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", filter: "grayscale(100%)" }} />
+                <div>
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", fontWeight: 500, color: textDark, display: "block" }}>{t.name}</span>
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: textMedium, textTransform: "uppercase" }}>{t.op}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24 }}>
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIndex(i)}
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  border: "none",
+                  cursor: "pointer",
+                  background: i === activeIndex ? primaryGold : borderLight,
+                  transition: "background 0.3s ease",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ======= FAQ SECTION ======= */
+const FAQSection = () => {
+  const items = [
+    { q: "Saç ekimi ağrılı mı?", a: "Lokal anestezi altında yapıldığı için işlem sırasında herhangi bir ağrı hissetmezsiniz. İşlem sonrası hafif bir hassasiyet olabilir." },
+    { q: "İyileşme süresi ne kadardır?", a: "İlk 3 gün hafif şişmeler olabilir. 10-14 gün içinde kabuklar düşer. 6-12 ayda tam sonuç görülür." },
+    { q: "Saç ekimi kalıcı mı?", a: "Evet, ekilen greftler dönüş alanından alındığı için genetik olarak dökülmeye dirençlidir ve ömür boyu kalıcıdır." },
+    { q: "Saç ekimi fiyatları ne kadar?", a: "Fiyatlar greft sayısına ve kullanılan tekniğe göre değişir. Ücretsiz konsültasyon ile size özel fiyat alabilirsiniz." },
+    { q: "Operasyon sonrası nelere dikkat etmeliyim?", a: "İlk 3 gün yastık kullanmaktan kaçının, spor yapmayın, saç diplerine dokunmayın. Detaylı bakım rehberi verilmektedir." },
+  ];
+
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <section id="faq" style={{ background: bgWhite, padding: "120px 24px" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+        <SectionHeader label="SIKÇA SORULANLAR" title="Merak Ettikleriniz" />
+        {items.map((item, i) => (
+          <div
+            key={i}
+            style={{
+              borderBottom: `1px solid ${borderLight}`,
+              overflow: "hidden",
+            }}
+          >
+            <button
+              onClick={() => setOpenIndex(openIndex === i ? null : i)}
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "24px 0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "1.125rem", fontWeight: 500, color: openIndex === i ? primaryGold : textDark, transition: "color 0.3s ease" }}>
+                {item.q}
+              </span>
+              <span style={{ fontSize: "1.5rem", color: primaryGold, transition: "transform 0.3s ease", transform: openIndex === i ? "rotate(45deg)" : "rotate(0deg)", flexShrink: 0, marginLeft: 16 }}>
+                +
+              </span>
+            </button>
+            <div
+              style={{
+                maxHeight: openIndex === i ? 200 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.4s ease, padding 0.4s ease",
+                paddingBottom: openIndex === i ? 24 : 0,
+              }}
+            >
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: textMedium, lineHeight: 1.7 }}>
+                {item.a}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+/* ======= CTA / CONTACT SECTION ======= */
+const CTASection = () => {
+  const [formData, setFormData] = useState({ name: "", phone: "", email: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("sending");
+
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/serhair1@gmail.com", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          _subject: "SerHair Center - Yeni İletişim Formu Mesajı",
+          _template: "box",
+          _captcha: false,
+        }),
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        setFormData({ name: "", phone: "", email: "", message: "" });
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+
+    setTimeout(() => setStatus("idle"), 5000);
+  };
+
+  return (
+    <section id="contact" style={{ background: primaryGold, padding: "100px 24px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }} className="cta-grid">
+        <div>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 3.5vw, 3rem)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", color: textDark, marginBottom: 24 }}>
+            Ücretsiz<br />Konsültasyon Alın
+          </h2>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "1.125rem", color: textDark, opacity: 0.7, lineHeight: 1.8, marginBottom: 40 }}>
+            Uzman ekibimizden 24 saat içerisinde değerlendirme alın. Size özel çözüm ve fiyat teklifi için formu doldurun.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={textDark} strokeWidth="1.5"><path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path d="M3 5l7 5 7-5"/></svg>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: textDark }}>+90 (542) 118 06 78</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={textDark} strokeWidth="1.5"><path d="M10 18s-7-4.5-7-10a7 7 0 0114 0c0 5.5-7 10-7 10z"/><circle cx="10" cy="8" r="2.5"/></svg>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: textDark }}>Mutlukent, Çankaya/Ankara</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={textDark} strokeWidth="1.5"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M2 4l8 6 8-6"/></svg>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: textDark }}>serhair1@gmail.com</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+            <a href="https://instagram.com/ankara_sacekimi" target="_blank" rel="noopener noreferrer" style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${textDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none", opacity: 0.6 }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = primaryGold; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.borderColor = textDark; }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </a>
+            <a href="https://facebook.com/serhair" target="_blank" rel="noopener noreferrer" style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${textDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none", opacity: 0.6 }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = primaryGold; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.borderColor = textDark; }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="https://wa.me/905421180678" target="_blank" rel="noopener noreferrer" style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${textDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none", opacity: 0.6 }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = primaryGold; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.borderColor = textDark; }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            </a>
+            <a href="https://youtube.com/@serhair" target="_blank" rel="noopener noreferrer" style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${textDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none", opacity: 0.6 }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = primaryGold; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.borderColor = textDark; }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.46z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+            </a>
+            <a href="https://tiktok.com/@serhair1" target="_blank" rel="noopener noreferrer" style={{ width: 36, height: 36, borderRadius: "50%", border: `1px solid ${textDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none", opacity: 0.6 }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = primaryGold; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.borderColor = textDark; }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+            </a>
+          </div>
+        </div>
+        {/* Google Maps */}
+        <div style={{ marginTop: 32, border: `1px solid ${borderLight}`, overflow: "hidden" }}>
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3061.5!2d32.85!3d39.93!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMznCsDU1JzYwLjQiTiAzMsKwNTEnMDAuMCJF!5e0!3m2!1str!2str!4v1"
+            width="100%"
+            height="280"
+            style={{ border: 0, filter: "grayscale(20%) contrast(1.1)" }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="SerHair Center Konum"
+          />
+        </div>
+        <div style={{ background: charcoal, padding: 48 }}>
+          {status === "success" ? (
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke={primaryGold} strokeWidth="2"/><path d="M16 24l6 6 10-10" stroke={primaryGold} strokeWidth="2"/></svg>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: bgWhite, marginTop: 20 }}>Teşekkürler!</p>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: textLight, marginTop: 8 }}>Mesajınız serhair1@gmail.com adresine iletildi. En kısa sürede size dönüş yapacağız.</p>
+            </div>
+          ) : status === "error" ? (
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="#c44" strokeWidth="2"/><path d="M16 16l16 16M32 16l-16 16" stroke="#c44" strokeWidth="2"/></svg>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", color: bgWhite, marginTop: 20 }}>Hata Oluştu</p>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: textLight, marginTop: 8 }}>Lütfen tekrar deneyin veya telefon ile ulaşın.</p>
+              <button onClick={() => setStatus("idle")} style={{ marginTop: 20, fontFamily: "var(--font-body)", fontSize: "0.875rem", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: textDark, background: bgWhite, border: "none", padding: "12px 24px", cursor: "pointer" }}>TEKRAR DENE</button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <input
+                type="text"
+                name="name"
+                placeholder="Ad Soyad"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,251,240,0.3)", padding: "12px 0", color: bgWhite, fontFamily: "var(--font-body)", fontSize: "1rem", outline: "none", transition: "border-color 0.3s" }}
+                onFocus={(e) => { e.currentTarget.style.borderBottomColor = bgWhite; }}
+                onBlur={(e) => { e.currentTarget.style.borderBottomColor = "rgba(255,251,240,0.3)"; }}
+              />
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Telefon"
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,251,240,0.3)", padding: "12px 0", color: bgWhite, fontFamily: "var(--font-body)", fontSize: "1rem", outline: "none", transition: "border-color 0.3s" }}
+                onFocus={(e) => { e.currentTarget.style.borderBottomColor = bgWhite; }}
+                onBlur={(e) => { e.currentTarget.style.borderBottomColor = "rgba(255,251,240,0.3)"; }}
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="E-posta"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,251,240,0.3)", padding: "12px 0", color: bgWhite, fontFamily: "var(--font-body)", fontSize: "1rem", outline: "none", transition: "border-color 0.3s" }}
+                onFocus={(e) => { e.currentTarget.style.borderBottomColor = bgWhite; }}
+                onBlur={(e) => { e.currentTarget.style.borderBottomColor = "rgba(255,251,240,0.3)"; }}
+              />
+              <textarea
+                name="message"
+                placeholder="Mesajınız"
+                rows={3}
+                required
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,251,240,0.3)", padding: "12px 0", color: bgWhite, fontFamily: "var(--font-body)", fontSize: "1rem", outline: "none", resize: "none", transition: "border-color 0.3s" }}
+                onFocus={(e) => { e.currentTarget.style.borderBottomColor = bgWhite; }}
+                onBlur={(e) => { e.currentTarget.style.borderBottomColor = "rgba(255,251,240,0.3)"; }}
+              />
+              <button
+                type="submit"
+                disabled={status === "sending"}
+                style={{
+                  fontFamily: "var(--font-body)", fontSize: "0.875rem", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase",
+                  color: textDark, background: status === "sending" ? offWhite : bgWhite, border: "none", padding: "16px", cursor: status === "sending" ? "wait" : "pointer", transition: "background 0.3s ease", marginTop: 12, opacity: status === "sending" ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => { if (status !== "sending") e.currentTarget.style.background = offWhite; }}
+                onMouseLeave={(e) => { if (status !== "sending") e.currentTarget.style.background = bgWhite; }}
+              >
+                {status === "sending" ? "GÖNDERİLİYOR..." : "GÖNDER"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ======= FOOTER ======= */
+const Footer = () => {
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return (
+    <footer style={{ background: charcoal, padding: "80px 24px 40px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 48, marginBottom: 48 }}>
+          <div>
+            <img src="/assets/logo-main.png" alt="SerHair Center" style={{ height: 64, objectFit: "contain", display: "block", marginBottom: 16 }} />
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textLight, lineHeight: 1.7 }}>
+              Ankara'nın premium saç ekim merkezi. 15 yıllık tecrübe, doğal sonuçlar.
+            </p>
+          </div>
+          <div>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: primaryGold, textTransform: "uppercase", display: "block", marginBottom: 20 }}>HIZLI LİNKLER</span>
+            {["Anasayfa", "Hizmetlerimiz", "Hakkımızda", "Sıkça Sorulanlar", "İletişim"].map((link) => (
+              <button
+                key={link}
+                onClick={() => scrollTo(link === "Anasayfa" ? "hero" : link === "Hizmetlerimiz" ? "services" : link === "Sıkça Sorulanlar" ? "faq" : link === "İletişim" ? "contact" : "")}
+                style={{ display: "block", fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textLight, background: "none", border: "none", cursor: "pointer", padding: "4px 0", transition: "color 0.3s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = bgWhite; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = textLight; }}
+              >
+                {link}
+              </button>
+            ))}
+          </div>
+          <div>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: primaryGold, textTransform: "uppercase", display: "block", marginBottom: 20 }}>HİZMETLER</span>
+            {["DHI Saç Ekimi", "FUE Saç Ekimi", "PRP Tedavisi", "Sakal Ekimi", "Mikro Kaş Ekimi", "Long Hair Kaş Ekimi"].map((link) => (
+              <span key={link} style={{ display: "block", fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textLight, padding: "4px 0" }}>
+                {link}
+              </span>
+            ))}
+          </div>
+          <div>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: primaryGold, textTransform: "uppercase", display: "block", marginBottom: 20 }}>İLETİŞİM</span>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textLight, lineHeight: 1.7, marginBottom: 16 }}>
+              Mutlukent, Angora Blv. No: 25, 06800 Çankaya/Ankara
+            </p>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textLight, marginBottom: 16 }}>
+              +90 (542) 118 06 78<br />
+              serhair1@gmail.com
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              {/* Instagram */}
+              <a href="https://instagram.com/ankara_sacekimi" target="_blank" rel="noopener noreferrer"
+                style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${textLight}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryGold; e.currentTarget.style.background = `${primaryGold}20`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = textLight; e.currentTarget.style.background = "transparent"; }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textLight} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              </a>
+              {/* Facebook */}
+              <a href="https://facebook.com/serhair" target="_blank" rel="noopener noreferrer"
+                style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${textLight}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryGold; e.currentTarget.style.background = `${primaryGold}20`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = textLight; e.currentTarget.style.background = "transparent"; }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textLight} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              </a>
+              {/* WhatsApp */}
+              <a href="https://wa.me/905421180678" target="_blank" rel="noopener noreferrer"
+                style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${textLight}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryGold; e.currentTarget.style.background = `${primaryGold}20`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = textLight; e.currentTarget.style.background = "transparent"; }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textLight} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </a>
+              {/* YouTube */}
+              <a href="https://youtube.com/@serhair" target="_blank" rel="noopener noreferrer"
+                style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${textLight}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryGold; e.currentTarget.style.background = `${primaryGold}20`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = textLight; e.currentTarget.style.background = "transparent"; }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textLight} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.46z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+              </a>
+              {/* TikTok */}
+              <a href="https://tiktok.com/@serhair1" target="_blank" rel="noopener noreferrer"
+                style={{ width: 40, height: 40, borderRadius: "50%", border: `1px solid ${textLight}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.3s ease", textDecoration: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primaryGold; e.currentTarget.style.background = `${primaryGold}20`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = textLight; e.currentTarget.style.background = "transparent"; }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textLight} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid rgba(255,251,240,0.1)", paddingTop: 24 }}>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: textLight, opacity: 0.5, textAlign: "center" }}>
+            2025 SerHair. Tüm hakları saklıdır.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+/* ======= MAIN APP ======= */
+function App() {
+  const [loading, setLoading] = useState(true);
+  const heroContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!heroContentRef.current) return;
+
+    gsap.to(heroContentRef.current, {
+      opacity: 0,
+      scale: 0.95,
+      ease: "none",
+      scrollTrigger: {
+        trigger: heroContentRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      },
+    });
+
+    ScrollTrigger.refresh();
+  }, [loading]);
+
+  return (
+    <>
+      {loading && <Preloader onComplete={() => setLoading(false)} />}
+      <Navigation />
+      
+      {/* HERO */}
+      <section id="hero" style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden", background: bgHero }}>
+        <HairGrowthScene />
+        <div
+          ref={heroContentRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            padding: "0 48px",
+            background: "linear-gradient(to right, rgba(13,10,4,0.75) 0%, rgba(13,10,4,0.4) 50%, transparent 70%)",
+          }}
+        >
+          <div style={{ maxWidth: 560 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+              <span style={{ width: 40, height: 1, background: primaryGold }} />
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.15em", color: bgWhite, textTransform: "uppercase" }}>
+                ANKARA'NIN PREMIUM SAÇ EKİM MERKEZİ
+              </span>
+            </div>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.5rem, 5vw, 4.5rem)", fontWeight: 500, lineHeight: 1.1, color: bgWhite, letterSpacing: "-0.03em", marginBottom: 24 }}>
+              Köklerinde<br />
+              Özgüven Var
+            </h1>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "1.125rem", color: "rgba(255,251,240,0.85)", lineHeight: 1.8, maxWidth: 420, marginBottom: 36 }}>
+              SerHair'de modern teknikler ve uzmanlarımızla doğal, kalıcı saç ekimi sonuçları elde edin. Saçlarınıza geri dönün, kendinizi yeniden keşfedin. 15+ yıllık tecrübe, 10.000'den fazla mutlu hasta.
+            </p>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <button
+                onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+                style={{
+                  fontFamily: "var(--font-body)", fontSize: "0.875rem", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase",
+                  color: textDark, background: primaryGold, border: "none", height: 48, padding: "0 28px", cursor: "pointer", transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = goldLight; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = primaryGold; }}
+              >
+                Ücretsiz Konsültasyon
+              </button>
+              <button
+                onClick={() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth" })}
+                style={{
+                  fontFamily: "var(--font-body)", fontSize: "0.875rem", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase",
+                  color: bgWhite, background: "transparent", border: `1px solid ${bgWhite}`, height: 48, padding: "0 28px", cursor: "pointer", transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = bgWhite; e.currentTarget.style.color = textDark; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = bgWhite; }}
+              >
+                Hizmetlerimiz
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div style={{ position: "absolute", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+          <div style={{ animation: "bounce 2s ease-in-out infinite" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,251,240,0.5)" strokeWidth="1.5"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", fontWeight: 500, letterSpacing: "0.12em", color: "rgba(255,251,240,0.5)", textTransform: "uppercase" }}>
+            KAYDIRIN
+          </span>
+        </div>
+      </section>
+
+      <ServicesSection />
+      <WhyChooseSection />
+      <ProcessSection />
+      <GallerySection />
+      <TestimonialsSection />
+      <FAQSection />
+      <CTASection />
+      <Footer />
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(8px); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+          .why-grid { grid-template-columns: 1fr !important; }
+          .process-grid { grid-template-columns: 1fr !important; }
+          .process-line, .process-line-fill { display: none; }
+          .stats-row { flex-direction: column; gap: 24px !important; }
+          .cta-grid { grid-template-columns: 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </>
+  );
+}
+
+export default App;
