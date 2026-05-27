@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://serhair.com/sitemap.xml
